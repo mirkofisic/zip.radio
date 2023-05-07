@@ -94,7 +94,8 @@
       </div>
     </div>
     <q-no-ssr style="width: 100%; height: 100%;">
-      <div id="olMapView" class="row full-width full-height"></div>
+      <!-- <div id="olMapView" class="row full-width full-height"></div> -->
+      <!-- <OLMap></OLMap> -->
     </q-no-ssr>
   </q-page>
   </Suspense>
@@ -102,13 +103,20 @@
 
 
 <script setup>
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useMeta } from 'quasar'
 import { useRadioStore } from '../stores/radiostore'
 import { ref, onMounted, onBeforeMount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import useStreamRadio from 'src/compositions/StreamRadio'
 import EssentialLink from 'src/components/EssentialLink.vue'
+
+/*const OLMap = defineAsyncComponent(() =>
+  import('src/components/OLMap.vue')
+)*/
+// import OLMap from 'src/components/OLMap.vue'
+// OL imports
+/*
 import Feature from 'ol/Feature.js'
 import Map from 'ol/Map'
 import View from 'ol/View'
@@ -123,6 +131,8 @@ import {Point} from 'ol/geom.js'
 import {fromLonLat} from 'ol/proj'
 import WebGLTileLayer from 'ol/layer/WebGLTile.js'
 import { FeatureStyles } from 'src/compositions/models/styles'
+*/
+
 import DataTypes from 'src/compositions/util/DataTypes'
 import useEventBus from 'src/compositions/useEvent'
 
@@ -174,6 +184,7 @@ const onResize = async(size) => {
   height.value = Math.floor(size.height/3)
   fullHeight.value = Math.floor(size.height - 220)
 }
+/*
 const setUpOpenLayers = async () => {
   // setup points
   // console.log('total markers', radioStore.map.markers.length)
@@ -283,6 +294,7 @@ const setUpOpenLayers = async () => {
 
   olMap.value.on('click', onClickMap)
 }
+*/
 
 useMeta(() => {
   return {
@@ -330,7 +342,7 @@ if (process) {
 onMounted(async () => {
   console.log('onMounted')
   await radioStore.loadGlobeData()
-  setUpOpenLayers()
+  // setUpOpenLayers()
 })
 
 onBeforeMount(async () => {

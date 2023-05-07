@@ -20,7 +20,7 @@ const corsOptions = {
 // more info on params: https://v2.quasar.dev/quasar-cli/developing-ssr/ssr-middlewares
 export default ssrMiddleware(async ({ app /*, resolveUrlPath, publicPath, render */ }) => {
   // something to do with the server "app"
-  console.log('ssrMiddleware', process.env.SESSION_COLLECTION)
+  console.log('ssrMiddleware', process.env.SESSION_COLLECTION, process.env.DB_URI)
   // setup cors
 
   app.use(cors(corsOptions))
