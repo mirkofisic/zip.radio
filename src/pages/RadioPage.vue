@@ -95,7 +95,7 @@
     </div>
     <q-no-ssr style="width: 100%; height: 100%;">
       <!-- <div id="olMapView" class="row full-width full-height"></div> -->
-      <!-- <OLMap></OLMap> -->
+      <OLMap></OLMap>
     </q-no-ssr>
   </q-page>
   </Suspense>
@@ -110,10 +110,9 @@ import { ref, onMounted, onBeforeMount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import useStreamRadio from 'src/compositions/StreamRadio'
 import EssentialLink from 'src/components/EssentialLink.vue'
-
-/*const OLMap = defineAsyncComponent(() =>
-  import('src/components/OLMap.vue')
-)*/
+import DataTypes from 'src/compositions/util/DataTypes'
+import useEventBus from 'src/compositions/useEvent'
+let OLMap = null
 // import OLMap from 'src/components/OLMap.vue'
 // OL imports
 /*
@@ -132,9 +131,6 @@ import {fromLonLat} from 'ol/proj'
 import WebGLTileLayer from 'ol/layer/WebGLTile.js'
 import { FeatureStyles } from 'src/compositions/models/styles'
 */
-
-import DataTypes from 'src/compositions/util/DataTypes'
-import useEventBus from 'src/compositions/useEvent'
 
 const route = useRoute()
 const radioStore = useRadioStore()
@@ -334,6 +330,7 @@ if (import.meta.env.SSR) {
     }
   }
 } else {
+  OLMap = defineAsyncComponent(() => import('src/components/OLMap.vue'))
   radioStore.loadFavorites()
 }
 
