@@ -5,6 +5,7 @@ import axios from 'axios'
 import useStreamRadio from 'src/compositions/StreamRadio'
 import { LocalStorage } from 'quasar'
 import useNotify from 'src/compositions/useNotify'
+import useEventBust from 'src/compositions/useEvent'
 
 export const useRadioStore = defineStore('radio', {
   state: () => ({
@@ -228,6 +229,7 @@ export const useRadioStore = defineStore('radio', {
         }
         this.map.markers.push(marker)
       }
+      useEventBust.emit('GlobeData')
       // console.log(this.map.markers);
     },
     async searchRadioPlace(val) {

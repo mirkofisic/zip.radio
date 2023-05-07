@@ -5,8 +5,8 @@
 <script setup>
 
 import { useRadioStore } from '../stores/radiostore'
-import { ref, onMounted, } from 'vue'
-
+import { ref } from 'vue'
+import useEventBus from 'src/compositions/useEvent'
 // OL imports
 import Feature from 'ol/Feature.js'
 import Map from 'ol/Map'
@@ -138,7 +138,8 @@ const setUpOpenLayers = async () => {
   olMap.value.on('click', onClickMap)
 }
 
-onMounted(() => {
+useEventBus.on('GlobeData', async() => {
   setUpOpenLayers()
 })
+
 </script>
