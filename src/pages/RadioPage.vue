@@ -322,23 +322,21 @@ const onChangeRoute = async(to, from) => {
 }
 watch(route, onChangeRoute)
 
-if (process) {
-  console.log('SERVER:', process.env.SERVER)
-  if (process.env.SERVER) {
-    if (route.path === '' || route.path === '/') {
-      await radioStore.loadIndexData()
-    } else {
-      const deepPathsNumber = await getDeepPathsNumber(route.path)
-      if (deepPathsNumber >= 3) await radioStore.getRadioByURL(route.path, true, false, true)
-      if (deepPathsNumber === 2) await radioStore.getRadiosByPlaceURL(route.path)
-      if (deepPathsNumber < 2) {
-        await radioStore.loadIndexData()
-      }
-    }
+if (import.meta.env.SSR) {
+  if (route.path === '' || route.path === '/') {
+    await radioStore.loadIndexData()
   } else {
-    radioStore.loadFavorites()
+    const deepPathsNumber = await getDeepPathsNumber(route.path)
+    if (deepPathsNumber >= 3) await radioStore.getRadioByURL(route.path, true, false, true)
+    if (deepPathsNumber === 2) await radioStore.getRadiosByPlaceURL(route.path)
+    if (deepPathsNumber < 2) {
+      await radioStore.loadIndexData()
+    }
   }
+} else {
+  radioStore.loadFavorites()
 }
+
 onMounted(async () => {
   console.log('onMounted')
   await radioStore.loadGlobeData()
