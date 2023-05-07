@@ -155,7 +155,7 @@ const setUpOpenLayers = async () => {
   // olMap.value.on('singleclick', onClickMap)
   var selectPointerMove = new Pointer({
     handleEvent: function(ev) {
-      if (ev.type == 'pointermove' && ev && ev.originalEvent && !ev.dragging && ev.originalEvent.touches && ev.originalEvent.touches.length === 1) {
+      if (ev.type == 'pointermove' && ev && ev.originalEvent && !ev.dragging && ev.originalEvent instanceof TouchEvent) {
         const coordinate = olMap.value.getEventCoordinate(ev.originalEvent)
         // console.log(coordinate)
         let closeFeature = vectorSource.getClosestFeatureToCoordinate(coordinate);
