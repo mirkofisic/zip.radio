@@ -1,7 +1,7 @@
 <template>
   <Suspense>
   <q-layout view="lHh Lpr lFf">
-    <q-drawer v-model="leftDrawerOpen" bordered persistent side="left" :mini="mini">
+    <q-drawer v-if="!$q.platform.is.mobile" v-model="leftDrawerOpen" bordered persistent side="left" :mini="mini">
       <q-list padding>
         <q-item clickable v-ripple @click="toggleLeftDrawer">
           <q-item-section avatar>
@@ -43,12 +43,15 @@
     <q-page-container>
       <router-view />
     </q-page-container>
-    <!-- <q-footer>
-      <q-toolbar>
-        <q-space/>
-        <q-btn flat dense round icon="fullscreen" aria-label="Menu" @click="openFullScreen"/>
+    <q-footer v-if="$q.platform.is.mobile">
+      <q-toolbar class="bg-dark">
+        <q-btn class="col" stretch flat dense round icon="bookmark" aria-label="Menu" @click="useEventBus.emit('main-menu', { url: '/favorites' })"/>
+        <q-btn class="col" stretch flat dense round icon="schedule" aria-label="Menu" @click="useEventBus.emit('main-menu', { url: '/recent' })"/>
+        <q-btn class="col" stretch flat dense round icon="public" aria-label="Menu" @click="useEventBus.emit('main-menu', { url: '/map' })"/>
+        <q-btn v-if="$q.platform.is.mobile" class="col" stretch flat dense round icon="search" aria-label="Menu" @click="useEventBus.emit('main-menu', { url: '/search' })"/>
+        <q-btn class="col" stretch flat dense round icon="fullscreen" aria-label="Menu" @click="openFullScreen"/>
       </q-toolbar>
-    </q-footer> -->
+    </q-footer>
   </q-layout>
   </Suspense>
 </template>
@@ -69,7 +72,7 @@ const toggleLeftDrawer = async () => {
 }
 
 const openFullScreen = async() => {
-  console.log($q.fullscreen.isCapable)
+  // console.log($q.fullscreen.isCapable)
   if ($q.fullscreen.isActive) {
     $q.fullscreen.exit()
   } else {

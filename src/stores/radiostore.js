@@ -9,6 +9,7 @@ import useEventBust from 'src/compositions/useEvent'
 
 export const useRadioStore = defineStore('radio', {
   state: () => ({
+    isMobile: false,
     name: '',
     pageIndex: {
       countries: [],
@@ -278,6 +279,12 @@ export const useRadioStore = defineStore('radio', {
         this.pageIndex.radios = resp.data.data
         this.pageIndex.places = resp.data.nearby.places
         this.pageIndex.countries = resp.data.nearby.countries
+        if (this.isMobile) {
+          if (this.pageIndex.radios.length > 0) {
+            this.radio = this.pageIndex.radios[0]
+            useStreamRadio.play(this.radio)
+          }
+        }
       }
       return resp.data.data
     },
@@ -288,6 +295,12 @@ export const useRadioStore = defineStore('radio', {
         this.pageIndex.radios = resp.data.data
         this.pageIndex.places = resp.data.nearby.places
         this.pageIndex.countries = resp.data.nearby.countries
+        if (this.isMobile) {
+          if (this.pageIndex.radios.length > 0) {
+            this.radio = this.pageIndex.radios[0]
+            useStreamRadio.play(this.radio)
+          }
+        }
       }
       return resp.data.data
     },

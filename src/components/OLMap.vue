@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-
+import { useQuasar } from 'quasar'
 import { useRadioStore } from '../stores/radiostore'
 import { ref } from 'vue'
 import useEventBus from 'src/compositions/useEvent'
@@ -22,8 +22,10 @@ import {Point} from 'ol/geom.js'
 import {fromLonLat} from 'ol/proj'
 import WebGLTileLayer from 'ol/layer/WebGLTile.js'
 import { FeatureStyles } from 'src/compositions/models/styles'
+import Pointer from 'ol/interaction/Pointer'
 
 
+const $q = useQuasar()
 const radioStore = useRadioStore()
 const points = []
 const olMap = ref(null)
@@ -127,15 +129,48 @@ const setUpOpenLayers = async () => {
 
   const onClickMap = async (ev) => {
     console.log('click on map', ev)
-    const feature = olMap.value.forEachFeatureAtPixel(ev.pixel, (feature) => feature)
-    if (feature) {
-      const marker = feature.get('marker')
+    if (ev.dragging) { return }
+    const coordinate = olMap.value.getEventCoordinate(ev.originalEvent)
+    console.log(coordinate)
+    let closeFeature = vectorSource.getClosestFeatureToCoordinate(coordinate)
+    console.log(closeFeature)
+    let closeDistance = Infinity
+    olMap.value.forEachFeatureAtPixel(ev.pixel, (feature) => {
+      const geometry = feature.getGeometry()
+      const distance = geometry.getClosestPoint(ev.pixel)[1]
+      console.log(distance)
+      if (distance < closeDistance) {
+        closeFeature = feature
+        closeDistance = distance
+      }
+    })
+    if (closeFeature) {
+      const marker = closeFeature.get('marker')
       console.log(marker)
       radioStore.getRadiosByPlace(marker.position._id)
     }
   }
 
   olMap.value.on('click', onClickMap)
+  // olMap.value.on('singleclick', onClickMap)
+  var selectPointerMove = new Pointer({
+    handleEvent: function(ev) {
+      if (ev.type == 'pointermove' && ev && ev.originalEvent && !ev.dragging && ev.originalEvent.touches && ev.originalEvent.touches.length === 1) {
+        const coordinate = olMap.value.getEventCoordinate(ev.originalEvent)
+        // console.log(coordinate)
+        let closeFeature = vectorSource.getClosestFeatureToCoordinate(coordinate);
+        // console.log(closeFeature)
+        if (closeFeature) {
+          const marker = closeFeature.get('marker')
+          // console.log(marker)
+          radioStore.getRadiosByPlace(marker.position._id)
+        }
+      }
+      return true
+    }
+  })
+
+  if ($q.platform.is.mobile) olMap.value.addInteraction(selectPointerMove)
 }
 
 useEventBus.on('GlobeData', async() => {

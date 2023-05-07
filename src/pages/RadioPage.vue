@@ -2,11 +2,102 @@
 <template>
   <Suspense>
   <q-page class="flex" style="overflow: hidden; max-height:  calc(100vh - 55px); height: calc(100vh - 55px);">
-    <div class="row absolute-top-left q-pa-md full-height" style="z-index: 1;">
+    <div v-if="!$q.platform.is.mobile" class="row absolute-top-left q-pa-md full-height" style="z-index: 1;">
       <div class="col-3 full-height" style="min-width: 390px;">
         <q-card class="full-height">
           <q-card-section class="q-pa-xs">
             <q-toolbar class="q-pa-xs">
+              <q-select
+                filled
+                v-model="searchModel"
+                use-input
+                hide-selected
+                fill-input
+                input-debounce="0"
+                :options="searchOptions"
+                option-label="title"
+                option-value="_id"
+                @filter="filterFn"
+                dropdown-icon="search"
+                class="full-width"
+              >
+                <template v-slot:option="scope">
+                  <q-item v-bind="scope.itemProps" :to="scope.opt.url">
+                    <q-item-section avatar>
+                      <q-icon :name="scope.opt.icon" />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>{{ scope.opt.title }}</q-item-label>
+                      <q-item-label caption>{{ scope.opt.country }}</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </template>
+                <template v-slot:no-option>
+                  <q-item>
+                    <q-item-section class="text-grey">
+                      No results
+                    </q-item-section>
+                  </q-item>
+                </template>
+              </q-select>
+            </q-toolbar>
+            <q-toolbar q-pa-xs>
+              <q-btn v-show="!useStreamRadio.data.playing" flat stretch round dense class="q-mr-xs" color="blue-grey-6" size="30px" icon="play_circle_filled" @click="useStreamRadio.play(radioStore.radio)" />
+              <q-btn v-show="useStreamRadio.data.playing" :loading="useStreamRadio.data.loading" flat stretch round dense class="q-mr-sm" color="blue-grey-6" size="30px" icon="pause" @click="useStreamRadio.stop" />
+              <!-- <q-toolbar-title v-html="useStreamRadio.radioPageTitle" style="padding-top: 10px;"></q-toolbar-title> -->
+              <q-list>
+                <q-item>
+                  <q-item-section>
+                    <q-item-label :key="'label1'">{{ radioStore.radioTitle }}</q-item-label>
+                    <q-item-label caption :key="'label2'">{{ radioStore.radioPlace + ' - ' + radioStore.radioCountry  }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+              <q-space></q-space>
+              <q-btn flat round stretch dense :color="isFavorite ? 'green' : 'blue-grey-6'" size="15px" icon="favorite" @click="radioStore.addToFavorites" />
+              <q-btn flat round stretch dense color="blue-grey-6" size="15px" icon="share" />
+              <!-- <q-btn flat round stretch dense color="blue-grey-6" size="15px" icon="travel_explore" /> -->
+            </q-toolbar>
+          </q-card-section>
+          <q-card-section v-if="isFavorites || isRecent"><div class="text-h5">{{ isFavorites ? 'Favorites' : 'Recent' }}</div></q-card-section>
+          <q-card-section v-if="isFavorites || isRecent" class="q-pa-xs">
+            <q-scroll-area class="full-width" :style="'height:' + fullHeight + 'px;'">
+              <div class="row">
+                <q-list class="full-width">
+                  <EssentialLink v-for="radio in isFavorites ? radioStore.pageIndex.favorites : radioStore.pageIndex.recent" :key="radio._id" :radio="radio"/>
+                </q-list>
+              </div>
+            </q-scroll-area>
+          </q-card-section>
+          <q-card-section v-if="!isFavorites && !isRecent"><div class="text-h5">Radios</div></q-card-section>
+          <q-card-section v-if="!isFavorites && !isRecent" class="q-pa-xs">
+            <q-scroll-area class="full-width" :style="'height:' + height + 'px;'">
+              <div class="row">
+                <q-list class="full-width">
+                  <EssentialLink v-for="radio in radioStore.pageIndex.radios" :key="radio._id" :radio="radio"/>
+                </q-list>
+              </div>
+            </q-scroll-area>
+          </q-card-section>
+          <q-card-section v-if="!isFavorites && !isRecent"><div class="text-h5">Nerbay Places</div></q-card-section>
+          <q-card-section v-if="!isFavorites && !isRecent" class="q-pa-xs">
+            <q-scroll-area class="full-width" :style="'height:' + height + 'px;'">
+              <div class="row">
+                <q-list class="full-width">
+                  <EssentialLink v-for="place in radioStore.pageIndex.places" :key="place._id" :place="place"/>
+                </q-list>
+              </div>
+            </q-scroll-area>
+          </q-card-section>
+          <q-resize-observer @resize="onResize" />
+        </q-card>
+      </div>
+    </div>
+    <div v-else class="row absolute-top-left q-pa-md full-height full-width" :style="'z-index: 1;' + cssTop">
+      <div class="col-12 full-height absolute-bottom">
+        <q-card class="full-height">
+          <q-card-section class="q-pa-xs">
+            <q-toolbar v-if="isSearchable" class="q-pa-xs">
               <q-select
                 filled
                 v-model="searchModel"
@@ -104,7 +195,7 @@
 
 <script setup>
 import { computed, defineAsyncComponent } from 'vue'
-import { useMeta } from 'quasar'
+import { useMeta, useQuasar } from 'quasar'
 import { useRadioStore } from '../stores/radiostore'
 import { ref, onMounted, onBeforeMount, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -112,26 +203,9 @@ import useStreamRadio from 'src/compositions/StreamRadio'
 import EssentialLink from 'src/components/EssentialLink.vue'
 import DataTypes from 'src/compositions/util/DataTypes'
 import useEventBus from 'src/compositions/useEvent'
-let OLMap = null
-// import OLMap from 'src/components/OLMap.vue'
-// OL imports
-/*
-import Feature from 'ol/Feature.js'
-import Map from 'ol/Map'
-import View from 'ol/View'
-import TileLayer from 'ol/layer/Tile'
-// import TileLayer from 'ol/layer/WebGLTile.js';
-import VectorLayer from 'ol/layer/Vector.js'
-import VectorSource from 'ol/source/Vector.js'
-import BingMaps from 'ol/source/BingMaps.js'
-import XYZ from 'ol/source/XYZ'
-// import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style.js'
-import {Point} from 'ol/geom.js'
-import {fromLonLat} from 'ol/proj'
-import WebGLTileLayer from 'ol/layer/WebGLTile.js'
-import { FeatureStyles } from 'src/compositions/models/styles'
-*/
 
+let OLMap = null
+const $q = useQuasar()
 const route = useRoute()
 const radioStore = useRadioStore()
 const points = []
@@ -143,12 +217,15 @@ const searchModel = ref(null)
 const dth = new DataTypes()
 const isRecent = ref(false)
 const isFavorites = ref(false)
+const isSearch = ref(false)
+const topMobilePos = ref(100)
 
 
 useEventBus.on('main-menu', async(ev) => {
-  if (ev.url.includes('favorites')) { isRecent.value = false; isFavorites.value = true }
-  if (ev.url.includes('recent')) { isRecent.value = true; isFavorites.value = false }
-  if (ev.url.includes('map')) { isRecent.value = false; isFavorites.value = false }
+  if (ev.url.includes('favorites')) { isRecent.value = false; isFavorites.value = true; isSearch.value = false  }
+  if (ev.url.includes('recent')) { isRecent.value = true; isFavorites.value = false; isSearch.value = false  }
+  if (ev.url.includes('map')) { isRecent.value = false; isFavorites.value = false; isSearch.value = false  }
+  if (ev.url.includes('search')) { isRecent.value = false; isFavorites.value = false; isSearch.value = true }
 })
 
 const filterFn = async (val, update, abort) => {
@@ -168,6 +245,18 @@ const filterFn = async (val, update, abort) => {
     }
   })
 }
+
+const cssTop = computed(() => {
+  let css = 'top: calc(100% - ' + topMobilePos.value + 'px);'
+  if (isSearch.value === true || isFavorites.value === true || isRecent.value === true) css = 'top: 0px;'
+  return css
+})
+
+const isSearchable = computed(() => {
+  if(!$q.platform.is.mobile) return true
+  if (isSearch.value === true || isFavorites.value === true || isRecent.value === true) return true
+  return false
+})
 
 const isFavorite = computed(() => {
   const exist = radioStore.pageIndex.favorites.find(r => r._id === radioStore.radio._id)
@@ -335,13 +424,14 @@ if (import.meta.env.SSR) {
 }
 
 onMounted(async () => {
-  console.log('onMounted')
+  // console.log('onMounted')
   await radioStore.loadGlobeData()
   // setUpOpenLayers()
 })
 
 onBeforeMount(async () => {
-  console.log('onBeforeMount', route.path)
+  // console.log('onBeforeMount', route.path)
+  radioStore.isMobile = $q.platform.is.mobile
 })
 
 
